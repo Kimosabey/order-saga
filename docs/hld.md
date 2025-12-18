@@ -76,5 +76,9 @@ graph TD
 - `INVENTORY_RESERVED`: `{ id, item, ... }`
 - `PAYMENT_FAILED`: `{ id, reason: 'insufficient_funds' }`
 
+## 7. Test Cases & Limitations
+See **[docs/test_cases.md](test_cases.md)** for a detailed matrix of what is covered vs. missing production scenarios.
+
+
 ---
 *Created per Kimo’s Golden Trio guidelines.*

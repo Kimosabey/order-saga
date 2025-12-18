@@ -33,6 +33,7 @@ The system relies on an event loop to handle Distributed Transactions:
 33.    - **Client**: `cd client && npm run dev`
 34. 
 35. 📘 **[Read the High-Level Design (HLD)](docs/hld.md)** for architecture details.
+36. 🎓 **[Senior Interview Cheat Sheet](docs/interview_cheat_sheet.md)** for system design Q&A.
 
 ## 📸 Demo (Saga Rollback)
 *(Insert your GIF here)*
