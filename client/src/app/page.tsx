@@ -1,65 +1,185 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import { useState, useEffect } from 'react'
+import {
+  Box, Button, Container, Flex, Heading, Input, Text, Badge,
+  VStack, HStack, useToast, Card, CardBody, Step, StepIcon,
+  StepIndicator, StepStatus, StepTitle, StepSeparator, Stepper
+} from '@chakra-ui/react'
+import { motion } from 'framer-motion'
+import { createOrder, getOrderStatus } from './api'
+
+// Animations
+const MotionBox = motion(Box)
+
+export default function OrderSagaDashboard() {
+  const [loading, setLoading] = useState(false)
+  const [orderId, setOrderId] = useState<string | null>(null)
+  const [status, setStatus] = useState('IDLE') // IDLE, PENDING, CONFIRMED, CANCELLED
+
+  // Form Inputs
+  const [price, setPrice] = useState(50) // Default 50 (Success), >100 will fail
+  const [item, setItem] = useState('MacBook Pro')
+
+  const toast = useToast()
+
+  // 1. Handle Buy Button
+  const handleBuy = async () => {
+    setLoading(true)
+    setStatus('PENDING')
+    setOrderId(null)
+
+    try {
+      const data = await createOrder({ userId: 'user_123', item, price })
+      setOrderId(data.order.id)
+
+      toast({
+        title: 'Order Placed',
+        description: `Order ID: ${data.order.id.slice(0, 8)}...`,
+        status: 'info',
+        duration: 2000,
+      })
+    } catch (err) {
+      console.error(err)
+      setLoading(false)
+    }
+  }
+
+  // 2. Polling Logic (The "Real-Time" feel)
+  useEffect(() => {
+    if (!orderId || status === 'CONFIRMED' || status === 'CANCELLED') return;
+
+    const interval = setInterval(async () => {
+      const data = await getOrderStatus(orderId);
+      setStatus(data.status);
+
+      // Stop polling if final state reached
+      if (data.status === 'CONFIRMED' || data.status === 'CANCELLED') {
+        setLoading(false);
+        toast({
+          title: data.status === 'CONFIRMED' ? 'Success!' : 'Transaction Failed',
+          description: data.status === 'CONFIRMED'
+            ? 'Inventory Reserved & Payment Charged'
+            : 'Saga Rollback Triggered (Refunded)',
+          status: data.status === 'CONFIRMED' ? 'success' : 'error',
+          duration: 5000,
+        })
+      }
+    }, 1000); // Check every 1 second
+
+    return () => clearInterval(interval);
+  }, [orderId, status, toast]);
+
+  // Visual Steps for the Stepper
+  const getStepIndex = () => {
+    if (status === 'IDLE') return 0;
+    if (status === 'PENDING') return 1;
+    if (status === 'CONFIRMED') return 3;
+    if (status === 'CANCELLED') return 3; // Finished, but failed
+    return 0;
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <Container maxW="container.md" py={10}>
+      <VStack spacing={8} align="stretch">
+
+        {/* Header */}
+        <Box textAlign="center">
+          <Heading
+            bgGradient='linear(to-r, cyan.400, blue.500, purple.600)'
+            bgClip='text'
+            fontWeight='extrabold'
+            size="2xl"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            OrderSaga
+          </Heading>
+          <Text color="gray.400" mt={2}>
+            Distributed Transaction Visualization (Saga Pattern)
+          </Text>
+        </Box>
+
+        {/* Control Panel */}
+        <Card bg="gray.800" borderColor="gray.700" borderWidth="1px">
+          <CardBody>
+            <VStack spacing={4}>
+              <HStack w="full" spacing={4}>
+                <Box w="full">
+                  <Text mb={1} fontSize="sm" color="gray.400">Item Name</Text>
+                  <Input value={item} onChange={(e) => setItem(e.target.value)} />
+                </Box>
+                <Box w="full">
+                  <Text mb={1} fontSize="sm" color="gray.400">Price ($)</Text>
+                  <Input
+                    type="number"
+                    value={price}
+                    onChange={(e) => setPrice(Number(e.target.value))}
+                    borderColor={price > 100 ? 'red.500' : 'green.500'}
+                  />
+                  <Text fontSize="xs" color={price > 100 ? 'red.400' : 'green.400'}>
+                    {price > 100 ? 'Will Fail (Insufficient Funds)' : 'Will Succeed'}
+                  </Text>
+                </Box>
+              </HStack>
+
+              <Button
+                w="full"
+                colorScheme={price > 100 ? 'red' : 'blue'}
+                size="lg"
+                onClick={handleBuy}
+                isLoading={loading}
+                loadingText="Processing Saga..."
+              >
+                {price > 100 ? 'Simulate Failure Scenario' : 'Place Order'}
+              </Button>
+            </VStack>
+          </CardBody>
+        </Card>
+
+        {/* Status Display */}
+        {orderId && (
+          <MotionBox
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            bg="gray.900"
+            p={6}
+            borderRadius="md"
           >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+            <Heading size="md" mb={6} textAlign="center">
+              Transaction Status: <Badge fontSize="0.8em" colorScheme={status === 'CONFIRMED' ? 'green' : status === 'CANCELLED' ? 'red' : 'yellow'}>{status}</Badge>
+            </Heading>
+
+            {/* The Visual Saga Flow */}
+            <Stepper size='lg' index={getStepIndex()} colorScheme={status === 'CANCELLED' ? 'red' : 'green'}>
+              <Step>
+                <StepIndicator><StepStatus complete={<StepIcon />} incomplete={<StepIcon />} active={<StepIcon />} /></StepIndicator>
+                <Box flexShrink='0'><StepTitle>Order Created</StepTitle></Box>
+                <StepSeparator />
+              </Step>
+              <Step>
+                <StepIndicator><StepStatus complete={<StepIcon />} incomplete={<StepIcon />} active={<StepIcon />} /></StepIndicator>
+                <Box flexShrink='0'><StepTitle>Inventory Reserved</StepTitle></Box>
+                <StepSeparator />
+              </Step>
+              <Step>
+                <StepIndicator><StepStatus complete={<StepIcon />} incomplete={<StepIcon />} active={<StepIcon />} /></StepIndicator>
+                <Box flexShrink='0'>
+                  <StepTitle>
+                    {status === 'CANCELLED' ? 'Payment Failed' : 'Payment Charged'}
+                  </StepTitle>
+                </Box>
+              </Step>
+            </Stepper>
+
+            {status === 'CANCELLED' && (
+              <Box mt={6} p={3} bg="red.900" borderRadius="md" textAlign="center">
+                <Text color="red.200" fontWeight="bold">⚠️ Saga Rollback Triggered</Text>
+                <Text fontSize="sm" color="red.200">Inventory was reserved, then released.</Text>
+              </Box>
+            )}
+
+          </MotionBox>
+        )}
+      </VStack>
+    </Container>
+  )
 }
