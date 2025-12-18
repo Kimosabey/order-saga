@@ -18,32 +18,40 @@
 
 ```mermaid
 graph TD
+    %% Define Styles
+    classDef client fill:#3498db,stroke:#333,stroke-width:2px,color:#fff;
+    classDef service fill:#9b59b6,stroke:#333,stroke-width:2px,color:#fff;
+    classDef queue fill:#dfd,stroke:#333,stroke-width:1px,stroke-dasharray: 5 5;
+    classDef rollback fill:#f66,stroke:#333,stroke-width:2px,color:#fff;
+
     User([User]) -->|HTTP POST| Client[Next.js Client]
-    Client -->|HTTP POST /create-order| Order[Order Service]
+    Client -->|API Call| OrderS[Order Service]
     
-    subgraph "RabbitMQ Bus"
-        Q1[(ORDER_CREATED)]
-        Q2[(INVENTORY_RESERVED)]
-        Q3[(PAYMENT_SUCCESS)]
-        Q4[(PAYMENT_FAILED)]
-        Q5[(INVENTORY_REFUNDED)]
+    subgraph Event_Bus [RabbitMQ Bus]
+        direction LR
+        Q1[ORDER_CREATED]
+        Q2[INVENTORY_RESERVED]
+        Q3[PAYMENT_SUCCESS]
+        Q4[PAYMENT_FAILED]
     end
 
-    Order -->|Pub| Q1
+    OrderS -->|Publish| Q1
+    Q1 -->|Subscribe| InvS[Inventory Service]
+    InvS -->|Publish| Q2
     
-    Q1 -->|Sub| Inv[Inventory Service]
-    Inv -->|Pub| Q2
-    
-    Q2 -->|Sub| Pay[Payment Service]
-    Pay -->|Pub| Q3
-    Pay -->|Pub| Q4
+    Q2 -->|Subscribe| PayS[Payment Service]
+    PayS -->|Publish| Q3
+    PayS -->|Publish| Q4
 
-    Q3 -->|Sub| Order
-    Q4 -->|Sub| Order
-    Q4 -->|Sub| Inv
-    
-    Inv -->|Pub| Q5
-    Q5 -->|Sub| Order
+    Q3 -->|Update Status| OrderS
+    Q4 -->|Rollback| InvS
+    Q4 -->|Cancel| OrderS
+
+    %% Apply Classes
+    class Client client
+    class OrderS,InvS,PayS service
+    class Q1,Q2,Q3,Q4 queue
+    class Q4,InvS,OrderS rollback
 ```
 
 ## 4. Saga Logic (The State Machine)

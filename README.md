@@ -14,6 +14,36 @@ In a microservices architecture, you cannot use local database transactions (ACI
 ## 🧠 Architecture Flow
 The system relies on an event loop to handle Distributed Transactions:
 
+```mermaid
+graph TD
+    %% Define Styles
+    classDef service fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef message fill:#dfd,stroke:#333,stroke-width:2px,stroke-dasharray: 5 5;
+    classDef rollback fill:#f66,stroke:#333,stroke-width:2px;
+
+    OrderS[Order Service]
+    InvS[Inventory Service]
+    PayS[Payment Service]
+    RabbitMQ((RabbitMQ))
+    
+    OrderS -- "1. ORDER_CREATED" --> RabbitMQ
+    RabbitMQ -- "2. Consume" --> InvS
+    InvS -- "3. INVENTORY_RESERVED" --> RabbitMQ
+    RabbitMQ -- "4. Consume" --> PayS
+    
+    PayS -- "5a. PAYMENT_SUCCESS" --> RabbitMQ
+    RabbitMQ -- "6. Order Confirmed" --> OrderS
+    
+    PayS -- "5b. PAYMENT_FAILED" --> RabbitMQ
+    RabbitMQ -- "6. Rollback / Restock" --> InvS
+    InvS -- "7. Order Cancelled" --> OrderS
+
+    %% Apply Classes
+    class OrderS,InvS,PayS service
+    class RabbitMQ message
+    class PayS,InvS rollback
+```
+
 1. **Order Service:** Creates Order (PENDING) → Emits `ORDER_CREATED`
 2. **Inventory Service:** Consumes event → Deducts Stock → Emits `INVENTORY_RESERVED`
 3. **Payment Service:** Consumes event → Charges User
@@ -21,19 +51,21 @@ The system relies on an event loop to handle Distributed Transactions:
     - **Failure:** Emits `PAYMENT_FAILED` → Triggers **Rollback**.
 4. **Rollback (Compensation):** Inventory Service listens for failure → Restocks Item → Order Cancelled.
 
-24. ## ⚡ How to Run Locally
-25. 1. **Infrastructure**:
-26.    ```bash
-27.    docker-compose up -d
-28.    ```
-29. 2. **Start Services** (Run in separate terminals):
-30.    - **Order Service**: `cd order-service && npm run dev`
-31.    - **Inventory Service**: `cd inventory-service && npm run dev`
-32.    - **Payment Service**: `cd payment-service && npm run dev`
-33.    - **Client**: `cd client && npm run dev`
-34. 
-35. 📘 **[Read the High-Level Design (HLD)](docs/hld.md)** for architecture details.
-36. 🎓 **[Senior Interview Cheat Sheet](docs/interview_cheat_sheet.md)** for system design Q&A.
+## ⚡ How to Run Locally
+1. **Infrastructure**:
+   ```bash
+   docker-compose up -d
+   ```
+2. **Start Services** (Run in separate terminals):
+   - **Order Service**: `cd order-service && npm run dev`
+   - **Inventory Service**: `cd inventory-service && npm run dev`
+   - **Payment Service**: `cd payment-service && npm run dev`
+   - **Client**: `cd client && npm run dev`
+
+📘 **[Read the High-Level Design (HLD)](docs/hld.md)** for architecture details.
+🛠️ **[Setup Guide](docs/setup.md)** for detailed installation.
+🔄 **[Transaction Flow Details](docs/flow.md)** for sequence diagrams.
+🎓 **[Senior Interview Cheat Sheet](docs/interview_cheat_sheet.md)** for system design Q&A.
 
 ## 📸 Demo (Saga Rollback)
 *(Insert your GIF here)*
