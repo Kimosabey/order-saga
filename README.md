@@ -1,4 +1,23 @@
-# OrderSaga - Distributed Transaction System (Saga Pattern)
+# OrderSaga
+
+![Thumbnail](docs/assets/thumbnail.png)
+
+## Distributed Transaction System (Saga Pattern)
+
+<div align="center">
+
+![Status](https://img.shields.io/badge/Status-Production_Ready-success?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
+
+**Tech Stack**
+
+![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-Event_Bus-FF6600?style=for-the-badge&logo=rabbitmq&logoColor=white)
+![Postgres](https://img.shields.io/badge/PostgreSQL-ACID-336791?style=for-the-badge&logo=postgresql&logoColor=white)
+
+</div>
+
+---
 
 ## 🚀 The Challenge
 In a microservices architecture, you cannot use local database transactions (ACID) across different services. If an Order is created but Payment fails, the Inventory (which was already reserved) becomes inconsistent.
@@ -12,38 +31,10 @@ In a microservices architecture, you cannot use local database transactions (ACI
 - **Infrastructure:** Docker, PostgreSQL
 
 ## 🧠 Architecture Flow
+
+![Architecture](docs/assets/architecture.png)
+
 The system relies on an event loop to handle Distributed Transactions:
-
-```mermaid
-graph TD
-    %% Define Styles
-    classDef service fill:#f9f,stroke:#333,stroke-width:2px;
-    classDef message fill:#dfd,stroke:#333,stroke-width:2px,stroke-dasharray: 5 5;
-    classDef rollback fill:#f66,stroke:#333,stroke-width:2px;
-
-    OrderS[Order Service]
-    InvS[Inventory Service]
-    PayS[Payment Service]
-    RabbitMQ((RabbitMQ))
-    
-    OrderS -- "1. ORDER_CREATED" --> RabbitMQ
-    RabbitMQ -- "2. Consume" --> InvS
-    InvS -- "3. INVENTORY_RESERVED" --> RabbitMQ
-    RabbitMQ -- "4. Consume" --> PayS
-    
-    PayS -- "5a. PAYMENT_SUCCESS" --> RabbitMQ
-    RabbitMQ -- "6. Order Confirmed" --> OrderS
-    
-    PayS -- "5b. PAYMENT_FAILED" --> RabbitMQ
-    RabbitMQ -- "6. Rollback / Restock" --> InvS
-    InvS -- "7. Order Cancelled" --> OrderS
-
-    %% Apply Classes
-    class OrderS,InvS,PayS service
-    class RabbitMQ message
-    class PayS,InvS rollback
-```
-
 1. **Order Service:** Creates Order (PENDING) → Emits `ORDER_CREATED`
 2. **Inventory Service:** Consumes event → Deducts Stock → Emits `INVENTORY_RESERVED`
 3. **Payment Service:** Consumes event → Charges User
