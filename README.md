@@ -8,55 +8,92 @@
 
 ![Status](https://img.shields.io/badge/Status-Production_Ready-success?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
-
-**Tech Stack**
-
-![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
-![RabbitMQ](https://img.shields.io/badge/RabbitMQ-Event_Bus-FF6600?style=for-the-badge&logo=rabbitmq&logoColor=white)
-![Postgres](https://img.shields.io/badge/PostgreSQL-ACID-336791?style=for-the-badge&logo=postgresql&logoColor=white)
+![Pattern](https://img.shields.io/badge/Pattern-Saga_Choreography-FF6600?style=for-the-badge)
 
 </div>
 
+**OrderSaga** is a reference implementation of the **Distributed Saga Pattern** using Node.js, RabbitMQ, and PostgreSQL. It demonstrates how to maintain data consistency across microservices without using 2-Phase Commit (2PC), handling failures via **Compensating Transactions**.
+
 ---
 
-## 🚀 The Challenge
-In a microservices architecture, you cannot use local database transactions (ACID) across different services. If an Order is created but Payment fails, the Inventory (which was already reserved) becomes inconsistent.
+## 🚀 Quick Start
 
-**OrderSaga** solves this using the **Choreography-based Saga Pattern**. It ensures eventual consistency without using a centralized orchestrator or distributed locks.
+Run the entire system (Infra + 4 Microservices):
 
-## 🛠 Tech Stack
-- **Services:** Node.js, Express, TypeScript (Monorepo)
-- **Messaging:** RabbitMQ (Event-Driven Communication)
-- **Frontend:** Next.js 14, Chakra UI, Framer Motion
-- **Infrastructure:** Docker, PostgreSQL
+```bash
+# 1. Start Infrastructure (RabbitMQ + Postgres)
+docker-compose up -d
 
-## 🧠 Architecture Flow
+# 2. Start Services (Requires 4 Terminals or 'concurrently')
+# Terminal 1: Order Service
+cd order-service && npm install && npm run dev
+# Terminal 2: Inventory Service
+cd inventory-service && npm install && npm run dev
+# Terminal 3: Payment Service
+cd payment-service && npm install && npm run dev
+# Terminal 4: Frontend
+cd client && npm install && npm run dev
+```
 
+> **Detailed Setup**: See [GETTING_STARTED.md](./docs/GETTING_STARTED.md) for full instructions.
+
+---
+
+## 📸 Demo & Architecture
+
+### System Architecture (The Flow)
 ![Architecture](docs/assets/architecture.png)
 
-The system relies on an event loop to handle Distributed Transactions:
-1. **Order Service:** Creates Order (PENDING) → Emits `ORDER_CREATED`
-2. **Inventory Service:** Consumes event → Deducts Stock → Emits `INVENTORY_RESERVED`
-3. **Payment Service:** Consumes event → Charges User
-    - **Success:** Emits `PAYMENT_SUCCESS` → Order Confirmed.
-    - **Failure:** Emits `PAYMENT_FAILED` → Triggers **Rollback**.
-4. **Rollback (Compensation):** Inventory Service listens for failure → Restocks Item → Order Cancelled.
+The system relies on an **Event Loop** (Choreography):
+1.  **Order Service**: Emits `ORDER_CREATED`.
+2.  **Inventory Service**: Reserves stock -> Emits `INVENTORY_RESERVED`.
+3.  **Payment Service**: Charges card.
+    *   **Success**: Emits `PAYMENT_SUCCESS` -> Order Confirmed.
+    *   **Failure**: Emits `PAYMENT_FAILED` -> Triggers **Rollback**.
 
-## ⚡ How to Run Locally
-1. **Infrastructure**:
-   ```bash
-   docker-compose up -d
-   ```
-2. **Start Services** (Run in separate terminals):
-   - **Order Service**: `cd order-service && npm run dev`
-   - **Inventory Service**: `cd inventory-service && npm run dev`
-   - **Payment Service**: `cd payment-service && npm run dev`
-   - **Client**: `cd client && npm run dev`
+> **Deep Dive**: See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for Sequence Diagrams.
 
-📘 **[Read the High-Level Design (HLD)](docs/hld.md)** for architecture details.
-🛠️ **[Setup Guide](docs/setup.md)** for detailed installation.
-🔄 **[Transaction Flow Details](docs/flow.md)** for sequence diagrams.
-🎓 **[Senior Interview Cheat Sheet](docs/interview_cheat_sheet.md)** for system design Q&A.
+---
 
-## 📸 Demo (Saga Rollback)
-*(Insert your GIF here)*
+## ✨ Key Features
+
+*   **🔄 Distributed Transactions**: Ensures consistent data across 3 separate databases.
+*   **🔙 Automatic Rollback**: Implements "Compensating Transactions" to undo steps if a process fails.
+*   **📨 Event-Driven**: Fully decoupled communication using **RabbitMQ**.
+*   **🏢 Database-Per-Service**: Strict isolation; no shared databases.
+
+---
+
+## 📚 Documentation
+
+| Document | Description |
+| :--- | :--- |
+| [**System Architecture**](./docs/ARCHITECTURE.md) | High-Level Design, Sequence Diagrams, and Decisions. |
+| [**Getting Started**](./docs/GETTING_STARTED.md) | Setup guide for local development. |
+| [**Failure Scenarios**](./docs/FAILURE_SCENARIOS.md) | Deep dive into Rollbacks & Eventual Consistency. |
+| [**Interview Q&A**](./docs/INTERVIEW_QA.md) | "Choreography vs Orchestration" & other questions. |
+
+---
+
+## 🔧 Tech Stack
+
+| Component | Technology | Role |
+| :--- | :--- | :--- |
+| **Services** | **Node.js + Express** | Microservices API logic. |
+| **Messaging** | **RabbitMQ** | Asynchronous Event Bus. |
+| **Database** | **PostgreSQL** | Relational data persistence. |
+| **Frontend** | **Next.js 14** | Dashboard to trigger/visualize Sagas. |
+
+---
+
+## 👤 Author
+
+**Harshan Aiyappa**  
+Senior Full-Stack Hybrid Engineer  
+[GitHub Profile](https://github.com/Kimosabey)
+
+---
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
