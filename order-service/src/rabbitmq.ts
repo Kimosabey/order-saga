@@ -29,10 +29,11 @@ class RabbitMQ {
                 throw new Error("Failed to create channel");
             }
 
-            // Assert Queues
+            // Assert Queues (Forward & Backward/Saga)
             await this.channel.assertQueue('ORDER_CREATED', { durable: true });
-            await this.channel.assertQueue('ORDER_CONFIRMED', { durable: true });
-            await this.channel.assertQueue('ORDER_CANCELLED', { durable: true });
+            await this.channel.assertQueue('PAYMENT_SUCCESS', { durable: true });
+            await this.channel.assertQueue('PAYMENT_FAILED', { durable: true });
+            await this.channel.assertQueue('INVENTORY_RESERVED', { durable: true });
 
             console.log("✅ RabbitMQ Connected & Queues Ready");
         } catch (error) {
