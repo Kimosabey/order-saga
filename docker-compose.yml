@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  # Message Broker - The "Mailman"
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: ordersaga-rabbitmq
+    ports:
+      - "5672:5672"   # For our Node apps
+      - "15672:15672" # For the Browser UI (User: guest / Pass: guest)
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Database - The "Ledger"
+  postgres:
+    image: postgres:15
+    container_name: ordersaga-postgres
+    ports: 
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: ordersaga_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
