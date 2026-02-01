@@ -108,7 +108,7 @@ Licensed under the MIT License.
 
 ---
 
-## Author
+## 👤 Author
 
 **Harshan Aiyappa**  
 Senior Full-Stack Hybrid AI Engineer  

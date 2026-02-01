@@ -4,7 +4,7 @@
 
 ---
 
-## 1. "Tell me about this project..." (The 2-Minute Pitch)
+## 1. "Tell me about this project..."
 
 "OrderSaga is a distributed transaction engine designed to solve the consistency problem in microservices. In a typical monorepo, you have ACID transactions. In microservices, each service has its own database—so if an order is created but the payment fails, you end up with inconsistent stock.
 
@@ -12,7 +12,7 @@ I implemented the **Choreography-based Saga Pattern** using Node.js and RabbitMQ
 
 ---
 
-## 2. "What was the hardest technical challenge?"
+## 2. "What was the hardest challenge?"
 
 "The hardest part wasn't the 'Happy Path'; it was handling **Partial Failures and Idempotency**.
 
