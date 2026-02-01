@@ -67,5 +67,28 @@ graph TD
 🔄 **[Transaction Flow Details](docs/flow.md)** for sequence diagrams.
 🎓 **[Senior Interview Cheat Sheet](docs/interview_cheat_sheet.md)** for system design Q&A.
 
-## 📸 Demo (Saga Rollback)
-*(Insert your GIF here)*
+## 🖼️ Visual Gallery (V3 Standard)
+
+| ![Hero](docs/assets/hero_main.png) | ![Dashboard](docs/assets/dashboard.png) |
+|:---:|:---:|
+| **Event Stream UI** | **RabbitMQ Performance Metrics** |
+
+| ![Workflow](docs/assets/workflow.png) | ![Architecture](docs/assets/architecture.png) |
+|:---:|:---:|
+| **Saga Flow & Rollbacks** | **Distributed Infrastructure** |
+
+---
+
+## 🎯 Senior Engineer Signals (Self-Audit)
+
+*   **Atomic Transactions**: Implemented idempotent event consumers to prevent double-charging or over-stocking.
+*   **Observability**: Integrated health checks for RabbitMQ and PostgreSQL to monitor cluster health.
+*   **Error Handling**: Built a "Dead Letter Queue" for unhandled message exceptions.
+*   **Scalability**: Stateless order handlers allow for horizontal scaling via Kubernetes.
+
+---
+
+## 👤 Author
+**Harshan Aiyappa**  
+Senior Full-Stack Hybrid AI Engineer  
+[Portfolio](https://kimo-nexus.vercel.app/) • [GitHub](https://github.com/Kimosabey)
