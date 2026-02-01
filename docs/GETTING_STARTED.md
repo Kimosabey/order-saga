@@ -1,100 +1,71 @@
-# 🛠️ Setup Guide
-Detailed instructions to get the **OrderSaga** system running on your local machine.
+# Getting Started: OrderSaga
 
-## 🏗️ System Architecture
-The following diagram illustrates how the services interact with the infrastructure components:
+> Step-by-step guide to local deployment and environment configuration.
 
-```mermaid
-graph LR
-    subgraph Client_Layer [Frontend]
-        Client[Next.js App]
-    end
+---
 
-    subgraph Messaging_Layer [Broker]
-        RMQ((RabbitMQ))
-    end
+## 1. Prerequisites
 
-    subgraph Service_Layer [Backend Services]
-        OrderS[Order Service]
-        InvS[Inventory Service]
-        PayS[Payment Service]
-    end
+Ensure your development environment meets these requirements:
+*   **Node.js**: v18.0.0 or higher.
+*   **Docker Desktop**: Required for RabbitMQ and PostgreSQL containers.
+*   **Git**: For version control and cloning.
+*   **Postman/Insomnia**: For manual API testing (optional).
 
-    subgraph Storage_Layer [Databases]
-        DB_Order[(PostgreSQL: OrderDB)]
-        DB_Inv[(PostgreSQL: InventoryDB)]
-    end
+---
 
-    %% Connections
-    Client -- API Routes --> OrderS
-    OrderS -- DB Actions --> DB_Order
-    InvS -- DB Actions --> DB_Inv
-    
-    OrderS <--> RMQ
-    InvS <--> RMQ
-    PayS <--> RMQ
-    
-    %% Styling
-    classDef client fill:#3498db,stroke:#fff,color:#fff;
-    classDef service fill:#9b59b6,stroke:#fff,color:#fff;
-    classDef storage fill:#e67e22,stroke:#fff,color:#fff;
-    classDef broker fill:#2ecc71,stroke:#fff,color:#fff;
+## 2. Installation
 
-    class Client client;
-    class OrderS,InvS,PayS service;
-    class DB_Order,DB_Inv storage;
-    class RMQ broker;
-```
+Follow these steps to initialize the monorepo:
 
-## 📋 Prerequisites
-- **Node.js**: v18+
-- **Docker**: Desktop or Engine
-- **NPM/PNPM**: For package management
-
-## 🚀 Getting Started
-
-### 1. Clone the Repository
+### Infrastructure Setup
 ```bash
-git clone https://github.com/your-username/ordersaga-monorepo.git
-cd ordersaga-monorepo
-```
-
-### 2. Infrastructure Setup (Docker)
-Ensure Docker is running, then spin up RabbitMQ and PostgreSQL:
-```bash
+# 1. Spin up the Core Infrastructure
 docker-compose up -d
+
+# 2. Verify RabbitMQ is running (Management UI)
+# URL: http://localhost:15672 (guest/guest)
 ```
 
-### 3. Service Initialization
-You need to install dependencies for each service. In a monorepo setup, navigate to each folder:
-
-**Order Service:**
+### Dependency Installation
 ```bash
-cd order-service && npm install
+# Install all dependencies for the entire monorepo
+npm run install:all
 ```
 
-**Inventory Service:**
+---
+
+## 3. Environment Variables
+
+Each service expects specific `.env` configurations. Copy the `.env.example` in each directory.
+
+| Variable | Default Value | Description |
+| :--- | :--- | :--- |
+| `PORT` | `3001-3004` | Service port mapping. |
+| `RABBIT_URL` | `amqp://localhost` | Connection string for message broker. |
+| `DB_URL` | `postgres://...` | Connection string for service-specific DB. |
+| `JWT_SECRET` | `kimo-secret` | Authentication secret (if applicable). |
+
+---
+
+## 4. Running Tests
+
+Verification of the distributed transaction logic is performed via automated test suites.
+
+### Unit Tests
+Verify individual service logic (mocked messaging).
 ```bash
-cd inventory-service && npm install
+npm run test:unit
 ```
 
-**Payment Service:**
+### Integration Tests (The Saga Test)
+Verify the full end-to-end flow from Order ➔ Inventory ➔ Payment.
 ```bash
-cd payment-service && npm install
+npm run test:integration
 ```
 
-**Frontend Client:**
+### Chaos Testing
+Simulates a payment failure to verify the **Compensating Transaction** (Rollback).
 ```bash
-cd client && npm install
+npm run test:chaos:rollback
 ```
-
-### 4. Running the Application
-Open 4 separate terminals to run all components:
-- **Order Service**: `npm run dev`
-- **Inventory Service**: `npm run dev`
-- **Payment Service**: `npm run dev`
-- **Client**: `npm run dev`
-
-## 🩺 Health Check
-- RabbitMQ Management UI: [http://localhost:15672](http://localhost:15672) (guest/guest)
-- Application: [http://localhost:3000](http://localhost:3000)

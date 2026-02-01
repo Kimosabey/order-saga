@@ -5,7 +5,6 @@
 <div align="center">
 
 ![Status](https://img.shields.io/badge/Status-100%25_Operational-success?style=for-the-badge)
-![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
 ![Tech](https://img.shields.io/badge/Stack-Node.js_RabbitMQ_Postgres-61DBFB?style=for-the-badge)
 
 </div>
@@ -13,7 +12,6 @@
 ---
 
 ## 🚀 Quick Start
-
 Launch the entire system in 3 commands:
 
 ```bash
@@ -29,20 +27,20 @@ npm run start:all
 
 ---
 
-## 🖼️ Visual Gallery (V3 Standard)
+## 🖼️ Screenshots / Demo
+Standard assets following the [V3 Portfolio Asset Planner](../../PORTFOLIO_ASSET_PLANNER.md).
 
-| ![Hero](docs/assets/hero_main.png) | ![Dashboard](docs/assets/dashboard.png) |
+| ![Hero](./docs/assets/hero_main.png) | ![Dashboard](./docs/assets/dashboard.png) |
 |:---:|:---:|
 | **Event Stream UI** | **RabbitMQ Performance Metrics** |
 
-| ![Workflow](docs/assets/workflow.png) | ![Architecture](docs/assets/architecture.png) |
+| ![Workflow](./docs/assets/workflow.png) | ![Architecture](./docs/assets/architecture.png) |
 |:---:|:---:|
 | **Saga Flow & Rollbacks** | **Distributed Infrastructure** |
 
 ---
 
 ## ✨ Key Features
-
 *   **⚡ Choreography-based Saga**: Decentralized transaction management via RabbitMQ.
 *   **🔄 Automatic Rollbacks**: Compensation logic to restore consistency on payment failure.
 *   **📦 Idempotent Consumers**: Prevents duplicate processing in high-scale environments.
@@ -50,21 +48,19 @@ npm run start:all
 
 ---
 
-## 🧠 Architecture & Senior Signals
+## 🧠 Architecture
+The system employs a choreography-based saga where services communicate asynchronously. This eliminates the need for a central orchestrator, reducing coupling and increasing scalability.
 
-### System Design
-![Architecture](docs/assets/architecture.png)
+![Architecture](./docs/assets/architecture.png)
 
-### 🎯 Why this is a "Senior" Project
+### 🎯 Senior Engineer Signals
 *   **Atomic Transactions**: In microservices, local ACID is impossible. I implemented **Choreography Sagas** to maintain eventual consistency without distributed locks.
 *   **Race Condition Mitigation**: Used **Postgres Advisory Locks** and **Idempotency Keys** to ensure events are processed exactly once.
 *   **Fault Tolerance**: Built **Dead Letter Queues (DLQ)** to handle poisonous messages and transient network failures.
-*   **Scalability**: Stateless handlers allow horizontal scaling; the system handles thousands of concurrent order streams.
 
 ---
 
-## 🧪 Testing & Verification
-
+## 🧪 Testing & Scripts
 ```bash
 # Run Unit Tests
 npm run test:unit
@@ -79,6 +75,7 @@ npm run test:chaos:payment-fail
 ---
 
 ## 📚 Documentation
+Strict compliance with [PORTFOLIO_DOCS_STANDARD.md](../../PORTFOLIO_DOCS_STANDARD.md).
 
 | Document | Description |
 | :--- | :--- |
@@ -90,7 +87,6 @@ npm run test:chaos:payment-fail
 ---
 
 ## 🔧 Tech Stack
-
 | Component | Technology | Role |
 | :--- | :--- | :--- |
 | **Messaging** | **RabbitMQ** | Asynchronous Event Bus. |
@@ -103,7 +99,11 @@ npm run test:chaos:payment-fail
 ## 🔮 Future Enhancements
 *   [ ] Implement **Transactional Outbox Pattern** for guaranteed event delivery.
 *   [ ] Add **OpenTelemetry** for end-to-end distributed tracing.
-*   [ ] Migration to **NATS JetStream** for higher throughput.
+
+---
+
+## 📝 License
+Licensed under the MIT License.
 
 ---
 
@@ -117,8 +117,3 @@ Voice AI • Distributed Systems • Infrastructure
 [![GitHub](https://img.shields.io/badge/GitHub-Kimosabey-black?style=flat&logo=github)](https://github.com/Kimosabey)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Harshan_Aiyappa-blue?style=flat&logo=linkedin)](https://linkedin.com/in/harshan-aiyappa)
 [![X](https://img.shields.io/badge/X-@HarshanAiyappa-black?style=flat&logo=x)](https://x.com/HarshanAiyappa)
-
----
-
-## 📝 License
-Licensed under the MIT License.

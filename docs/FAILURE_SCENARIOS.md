@@ -1,33 +1,42 @@
-# Test Cases & Production Readiness
+# Failure Scenarios & Resilience Study: OrderSaga
 
-## ✅ Implemented Scenarios (The Portfolio Requirement)
-
-| Case | Scenario | Status |
-| :--- | :--- | :--- |
-| **1. Success Path** | Order ($50) → Stock Reserved → Payment OK → Order Confirmed | ✅ **WORKING** |
-| **2. Logical Failure** | Order ($150) → Stock Reserved → Payment Fails → Stock Refunded | ✅ **WORKING** (Saga Rollback) |
-| **3. Async UI** | User clicks buy → UI waits → Updates via Polling | ✅ **WORKING** |
+> Analysis of distributed system failure modes and the implemented safeguards.
 
 ---
 
-## ❌ Missing Scenarios (The "Senior" Interview Questions)
+## 1. Fault Analysis
 
-These scenarios are **NOT** handled in the current implementation but are critical for a real production system.
+In a distributed environment, partial failures are inevitable. This section details how the system reacts to critical component outages.
 
-### 1. The "Double Message" Case (Idempotency)
-- **The Bug**: If RabbitMQ sends the `PAYMENT_FAILED` message twice by accident.
-- **Current Result**: Inventory Service runs `Stock = Stock + 1` twice. (Free items generated).
-- **The Fix**: Implement **Idempotency Keys**.
-  - *Code*: Before increasing stock, check DB: `IF (transaction_id_123) EXISTS, IGNORE`.
+| Component | Failure Mode | Impact |
+| :--- | :--- | :--- |
+| **RabbitMQ** | Broker Crashes | **HIGH**. Services cannot communicate. Transactions are stuck in current state. |
+| **PostgreSQL** | DB Unreachable | **MEDIUM**. Affected service cannot process its leg of the Saga. Transaction times out. |
+| **Inventory Svc** | Out of Stock | **EXPECTED**. Triggers a logical "Saga Rollback" to cancel the order. |
+| **Payment Svc** | Auth Timeout | **HIGH**. Could lead to "Ghost Orders" where stock is reserved but never paid for. |
 
-### 2. The "Service Down" Case
-- **The Bug**: If Inventory Service crashes and an order is placed.
-- **Current Result**: `ORDER_CREATED` message sits in RabbitMQ. UI stays "Pending" forever.
-- **The Fix**: Implement a **Timeout Monitor** in Order Service.
-  - *Code*: `setTimeout(() => { if status is PENDING, mark as FAILED }, 30s)`.
+---
 
-### 3. The "Race Condition" Case
-- **The Bug**: Two users buy the last item at the exact same millisecond.
-- **Current Result**: Both pass `if (stock > 0)` check. Stock goes to `-1`.
-- **The Fix**: **Database Row Locking**.
-  - *Code*: `SELECT * FROM items WHERE id=1 FOR UPDATE` (Postgres Lock).
+## 2. Recovery Strategy
+
+### Idempotency (Exactly-Once Semantics)
+We use a **processed_events** table in each microservice. This ensures that if a network glitch causes RabbitMQ to redeliver a `PAYMENT_SUCCESS` message, the user is never charged twice and the stock isn't deducted twice.
+
+### Dead Letter Queues (DLQ)
+Messages that fail processing after 3 retries (due to data corruption or logic errors) are moved to a `SAGA_DEAD_LETTER` queue. This allows engineers to manually inspect and replay failed transactions without losing data.
+
+### Compensating Transactions
+The core of the Saga pattern is the "Undo" logic.
+*   **Action**: Reserve Stock.
+*   **Compensation**: Restock items based on `PAYMENT_FAILED` event.
+*   **Consistency**: Every "Success" event must have a corresponding "Failure" handler in all upstream services.
+
+---
+
+## 3. Chaos Testing
+
+To verify the resilience of the system, we perform targeted "Chaos Attacks" during development:
+
+1.  **Kill Payment Service**: Verify that the `INVENTORY_RESERVED` message sits safely in the queue and processes immediately once the service restarts.
+2.  **Network Partition**: Inject delay into the Payment auth. Verify that the system handles the timeout and triggers a cleanup task.
+3.  **Rollback Verification**: Forced a `PAYMENT_FAILED` status and verified via DB queries that the `stock` count returned to its original value.
