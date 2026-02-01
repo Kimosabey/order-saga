@@ -1,91 +1,114 @@
-# OrderSaga (AG-03)
-### Distributed Transaction System & Event-Driven Saga Engine
+# OrderSaga - Distributed Transaction System (Saga Pattern)
 
-![OrderSaga Hero](./docs/assets/hero_main.png)
+> **Distributed Saga Pattern**: Ensuring eventual consistency across microservices using choreography-based event streams.
+
+<div align="center">
 
 ![Status](https://img.shields.io/badge/Status-100%25_Operational-success?style=for-the-badge)
-![Category](https://img.shields.io/badge/Category-Distributed_Systems-blue?style=for-the-badge)
-![Tech](https://img.shields.io/badge/Stack-Node.js_RabbitMQ_Postgres-black?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
+
+</div>
 
 ---
 
-## 🌌 Overview
+## Quick Start
 
-**OrderSaga** is a sophisticated distributed transaction engine designed to solve the "Partial Failure" problem in microservices. It implements the **Choreography-based Saga Pattern** to ensure eventual consistency across decoupled services (Order, Inventory, Payment) without the performance overhead of distributed locks or two-phase commits.
+Launch the entire system in 3 commands:
 
-The system is built to handle high-concurrency order streams where failures are expected, guaranteeing that every customer charge is either completed with a confirmed order or automatically rolled back across all underlying databases.
-
----
-
-## 🏗️ Cognitive Hub (Architecture)
-
-![Architecture Infographic](./docs/assets/architecture.png)
-
-The system operates as a decentralized state machine powered by **RabbitMQ**:
-
-1.  **Order Orchestration**: Initiates the transaction state and manages the lifecycle from `PENDING` to `CONFIRMED`.
-2.  **Inventory Management**: Performs atomic reservations with automatic restock logic (Compensating Transactions) on failure.
-3.  **Payment Processing**: Handles transactional auth with built-in failure propagation back to the event stream.
-4.  **Observer Layer**: A real-time monitoring dashboard that visualizes the heartbeat of the RabbitMQ queues.
-
----
-
-## 🎨 Professional Interface
-
-![Dashboard Preview](./docs/assets/dashboard.png)
-
-The project features a **Premium Event Stream Dashboard** built with **Next.js 14** and **Framer Motion**:
-- **Real-time Queue Telemetry**: Visual throughput graphs showing message spikes across the RabbitMQ bus.
-- **Transaction Audit Logs**: A high-fidelity table showing the state of every Saga (Committed vs Rolled Back).
-- **Responsive System Health**: Real-time status indicators for the PostgreSQL cluster and RabbitMQ exchange.
-
----
-
-## 🔥 Senior Signals (Technical Highlights)
-
-- **Distributed Saga Pattern**: Decoupled transaction management using choreography to favor availability over strict consistency (BASE vs ACID).
-- **Idempotent Consumers**: Implemented application-level checks to prevent double-charging or over-stocking due to message redelivery.
-- **Race Condition Mitigation**: Utilizes **Postgres Advisory Locks** for atomic operations on shared service resources.
-- **Fault Tolerance (DLQ)**: Built dedicated **Dead Letter Queues** to isolate and debug poisonous messages without blocking the main stream.
-
----
-
-## ⚙️ Workflow Infographic
-
-![Workflow Infographic](./docs/assets/workflow.png)
-
----
-
-## 🚀 Quick Start
-
-### 1. Infrastructure (Docker)
 ```bash
-# Start RabbitMQ and PostgreSQL
+# 1. Start Infrastructure (RabbitMQ + Postgres)
 docker-compose up -d
-```
 
-### 2. Launch Services
-```bash
-# Install all dependencies and start microservices
+# 2. Install Dependencies
 npm run install:all
+
+# 3. Start all Microservices
 npm run start:all
 ```
 
 ---
 
-## 📚 Documentation Standard
-This project strictly adheres to the [Kimo Portfolio Standard](../../PORTFOLIO_DOCS_STANDARD.md).
+## Screenshots / Demo
 
-| Document | Description |
-| :--- | :--- |
-| [**System Architecture**](./docs/ARCHITECTURE.md) | Deep dive into Saga logic and Decision Logs. |
-| [**Getting Started**](./docs/GETTING_STARTED.md) | Environment setup and installation guide. |
-| [**Failure Scenarios**](./docs/FAILURE_SCENARIOS.md) | Fault analysis and Chaos Testing results. |
-| [**Interview Q&A**](./docs/INTERVIEW_QA.md) | System design justifications for interviews. |
+| ![Hero](./docs/assets/hero_main.png) | ![Dashboard](./docs/assets/dashboard.png) |
+|:---:|:---:|
+| **Event Stream UI** | **RabbitMQ Performance Metrics** |
+
+| ![Workflow](./docs/assets/workflow.png) | ![Architecture](./docs/assets/architecture.png) |
+|:---:|:---:|
+| **Saga Flow & Rollbacks** | **Distributed Infrastructure** |
 
 ---
 
-## 👤 Author
+## Key Features
+
+*   **⚡ Choreography-based Saga**: Decentralized transaction management via RabbitMQ.
+*   **🔄 Automatic Rollbacks**: Compensation logic to restore consistency on payment failure.
+*   **📦 Idempotent Consumers**: Prevents duplicate processing in high-scale environments.
+*   **📊 Real-time Observability**: Event stream dashboard for tracking transaction state.
+
+---
+
+## Architecture
+
+![Architecture](./docs/assets/architecture.png)
+
+### Senior Signal: Why this is hard
+*   **Atomic Transactions**: In microservices, local ACID is impossible. I implemented **Choreography Sagas** to maintain eventual consistency without distributed locks.
+*   **Race Condition Mitigation**: Used **Postgres Advisory Locks** and **Idempotency Keys** to ensure events are processed exactly once.
+*   **Fault Tolerance**: Built **Dead Letter Queues (DLQ)** to handle poisonous messages and transient network failures.
+
+---
+
+## Testing & Scripts
+
+```bash
+# Run Unit Tests
+npm run test:unit
+
+# Run Integration (Saga Flow) Tests
+npm run test:integration
+
+# Simulate Payment Failure (Triggers Rollback)
+npm run test:chaos:payment-fail
+```
+
+---
+
+## Documentation
+
+| Document | Description |
+| :--- | :--- |
+| [**System Architecture**](./docs/ARCHITECTURE.md) | Deep dive into Saga vs Orchestration patterns. |
+| [**Getting Started**](./docs/GETTING_STARTED.md) | Detailed environment and setup guide. |
+| [**Failure Scenarios**](./docs/FAILURE_SCENARIOS.md) | "What if?" analysis and disaster recovery. |
+| [**Interview Q&A**](./docs/INTERVIEW_QA.md) | System Design Q&A for this project. |
+
+---
+
+## Tech Stack
+
+| Component | Technology | Role |
+| :--- | :--- | :--- |
+| **Messaging** | **RabbitMQ** | Asynchronous Event Bus. |
+| **Services** | **Node.js / TS** | Core Microservices logic. |
+| **Database** | **PostgreSQL** | Persistent state for each service. |
+| **Interface** | **Next.js 14** | Transaction monitoring UI. |
+
+---
+
+## Future Enhancements
+*   [ ] Implement **Transactional Outbox Pattern** for guaranteed event delivery.
+*   [ ] Add **OpenTelemetry** for end-to-end distributed tracing.
+
+---
+
+## License
+Licensed under the MIT License.
+
+---
+
+## Author
 
 **Harshan Aiyappa**  
 Senior Full-Stack Hybrid AI Engineer  
@@ -94,3 +117,4 @@ Voice AI • Distributed Systems • Infrastructure
 [![Portfolio](https://img.shields.io/badge/Portfolio-kimo--nexus.vercel.app-00C7B7?style=flat&logo=vercel)](https://kimo-nexus.vercel.app/)
 [![GitHub](https://img.shields.io/badge/GitHub-Kimosabey-black?style=flat&logo=github)](https://github.com/Kimosabey)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Harshan_Aiyappa-blue?style=flat&logo=linkedin)](https://linkedin.com/in/harshan-aiyappa)
+[![X](https://img.shields.io/badge/X-@HarshanAiyappa-black?style=flat&logo=x)](https://x.com/HarshanAiyappa)
