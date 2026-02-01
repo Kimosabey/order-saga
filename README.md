@@ -5,6 +5,7 @@
 <div align="center">
 
 ![Status](https://img.shields.io/badge/Status-100%25_Operational-success?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
 ![Tech](https://img.shields.io/badge/Stack-Node.js_RabbitMQ_Postgres-61DBFB?style=for-the-badge)
 
 </div>
