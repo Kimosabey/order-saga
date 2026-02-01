@@ -1,4 +1,4 @@
-# System Architecture: OrderSaga
+# 🏗️ System Architecture: OrderSaga
 
 > Deep dive into the distributed system design, transaction management, and service boundaries.
 
@@ -9,9 +9,69 @@
 OrderSaga utilizes a **Choreography-based Saga Pattern** to manage distributed transactions across microservices. Unlike traditional 2PC (Two-Phase Commit), this architecture favors **Availability** and **Partition Tolerance** (CAP Theorem) by ensuring eventual consistency through asynchronous event streams.
 
 ### System Workflow
+![Architecture](./assets/architecture.png)
+
 The system relies on RabbitMQ as the central nervous system, where each service reacts to specific domain events to move the transaction state forward.
 
-![Architecture Diagram](./assets/architecture.png)
+#### Transaction Sequences
+Below are the detailed sequence diagrams for both success and failure states.
+
+##### ✅ Happy Path: Order Success
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as User
+    participant O as Order Service
+    participant Q as RabbitMQ
+    participant I as Inventory Service
+    participant P as Payment Service
+
+    U->>O: Create Order
+    O->>O: Save PENDING Order
+    O-->>Q: Publish: ORDER_CREATED
+    
+    Q->>I: Consume: ORDER_CREATED
+    I->>I: Deduct Stock
+    I-->>Q: Publish: INVENTORY_RESERVED
+    
+    Q->>P: Consume: INVENTORY_RESERVED
+    P->>P: Process Payment
+    P-->>Q: Publish: PAYMENT_SUCCESS
+    
+    Q->>O: Consume: PAYMENT_SUCCESS
+    O->>O: Update Order: COMPLETED
+    O-->>U: Order Confirmed!
+```
+
+##### ❌ Rollback Path: Payment Failure
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as User
+    participant O as Order Service
+    participant Q as RabbitMQ
+    participant I as Inventory Service
+    participant P as Payment Service
+
+    U->>O: Create Order
+    O->>O: Save PENDING Order
+    O-->>Q: Publish: ORDER_CREATED
+    
+    Q->>I: Consume: ORDER_CREATED
+    I->>I: Deduct Stock
+    I-->>Q: Publish: INVENTORY_RESERVED
+    
+    Note right of P: Payment Fails
+    Q->>P: Consume: INVENTORY_RESERVED
+    P-->>Q: Publish: PAYMENT_FAILED
+    
+    Note over Q,I: Compensation Triggered
+    Q->>I: Consume: PAYMENT_FAILED
+    I->>I: Restock Items (+1)
+    
+    Q->>O: Consume: PAYMENT_FAILED
+    O->>O: Update Order: CANCELLED
+```
 
 ---
 

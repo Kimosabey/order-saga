@@ -1,6 +1,8 @@
-# Getting Started: OrderSaga
+# 🚀 Getting Started: OrderSaga
 
 > Step-by-step guide to local deployment and environment configuration.
+
+![Dashboard Preview](./assets/dashboard.png)
 
 ---
 

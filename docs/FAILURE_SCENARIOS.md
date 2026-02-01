@@ -1,6 +1,8 @@
-# Failure Scenarios & Resilience Study: OrderSaga
+# 🛡️ Failure Scenarios & Resilience: OrderSaga
 
 > Analysis of distributed system failure modes and the implemented safeguards.
+
+![Saga Workflow](./assets/workflow.png)
 
 ---
 
