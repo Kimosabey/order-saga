@@ -62,10 +62,10 @@ graph TD
    - **Payment Service**: `cd payment-service && npm run dev`
    - **Client**: `cd client && npm run dev`
 
-📘 **[Read the High-Level Design (HLD)](docs/hld.md)** for architecture details.
-🛠️ **[Setup Guide](docs/setup.md)** for detailed installation.
-🔄 **[Transaction Flow Details](docs/flow.md)** for sequence diagrams.
-🎓 **[Senior Interview Cheat Sheet](docs/interview_cheat_sheet.md)** for system design Q&A.
+📘 **[System Architecture](./docs/ARCHITECTURE.md)**: HLD, LLD, and Design Decisions.
+🛠️ **[Getting Started](./docs/GETTING_STARTED.md)**: Setup guide and Environment variables.
+🔄 **[Failure Scenarios](./docs/FAILURE_SCENARIOS.md)**: Chaos testing and Rollback logic.
+🎓 **[Interview Q&A](./docs/INTERVIEW_QA.md)**: Saga Pattern & Microservices Q&A.
 
 ## 🖼️ Visual Gallery (V3 Standard)
 
